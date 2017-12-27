@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/set_note_sorting_way"
+        android:title="@string/sorting_way"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/search_note"
+        android:icon="@drawable/ic_search_api_material"
+        android:title="@string/search_note"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/set_notebook_sorting_way"
+        android:title="@string/sorting_way"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_delete_note"
+        android:icon="@drawable/ic_clear_material"
+        android:title="@string/delete_note"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/search_notebook"
+        android:icon="@drawable/ic_search_api_material"
+        android:title="@string/search_notebook"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        app:showAsAction="ifRoom"
+        />
+
+    <item
+        android:id="@+id/add_notebook"
+        android:icon="@drawable/ic_add_action"
+        android:title="@string/new_notebook"
+        app:showAsAction="ifRoom"/>
+
+</menu>
