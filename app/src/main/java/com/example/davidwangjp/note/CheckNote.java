@@ -26,10 +26,6 @@ public class CheckNote extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_note);
 
-        String html = "<html><head><title>TextView使用HTML</title></head><body><p><strong>强调</strong></p><p><em>斜体</em></p>"
-                + "<p><a href=\"http://www.dreamdu.com/xhtml/\">超链接HTML入门</a>学习HTML!</p><p><font color=\"#aabb00\">颜色1"
-                + "下面是网络图片</p><img src=\"/storage/emulated/0/photos/1514826936120.jpg\"/></body></html>";
-
         Intent intent = getIntent();
         String note_name = intent.getStringExtra("note");
 

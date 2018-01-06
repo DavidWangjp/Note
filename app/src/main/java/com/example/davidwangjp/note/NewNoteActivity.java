@@ -65,6 +65,8 @@ public class NewNoteActivity extends AppCompatActivity {
     private Uri imageUri;
     private float mInsertedImgWidth;
     private ArrayList<String> filepathes = new ArrayList<String>();
+    private boolean isNew;
+    private int note_id;
 
     private final int PICK_PIC = 1;
     private final int TAKE_PIC = 2;
@@ -89,9 +91,10 @@ public class NewNoteActivity extends AppCompatActivity {
             }
         });
 
-//        Intent intent = getIntent();
-//        note_book = intent.getStringExtra("data");
-        note_book = "默认笔记本";
+        Intent intent = getIntent();
+        note_id = Integer.parseInt(intent.getStringExtra("noteId"));
+        isNew = (note_id < 0) ? true : false;
+        note_book = intent.getStringExtra("notebook");
 
         dbHelper = new NoteDbHelper(NewNoteActivity.this);
 
@@ -109,14 +112,40 @@ public class NewNoteActivity extends AppCompatActivity {
         notebook.setText(note_book);
         note_content.setMovementMethod(ScrollingMovementMethod.getInstance());// 设置可滚动
 
+        if(!isNew)
+        {
+            SQLiteDatabase db = MainActivity.dbHelper.getReadableDatabase();
+            String[] projection = {};
+            String selection = "id = ?";
+            String[] selectionArgs = {note_name};
+            Cursor c = db.query("note", projection, selection, selectionArgs, null, null, null);
+            if (c.moveToNext())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                long time = c.getLong(c.getColumnIndex("create_time"));
+                String create_time = sdf.format(new Date(time));
+
+                String content = c.getString(c.getColumnIndex("note_content"));
+                note_content.setText(Html.fromHtml(note_content, imgGetter, null));
+
+                String title = c.getString(c.getColumnIndex("name"));
+                note_title.setText(title);
+
+                note_book = c.getString(c.getColumnIndex("note_book"));
+                notebook.setText(note_book);
+            }
+            c.close();
+            db.close();
+        }
+
         confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String filename = note_title.getText().toString();
                 String filecontent = note_content.getText().toString();
                 if(filename.isEmpty())
-                    Toast.makeText(getApplicationContext(), "标题不能为空", Toast.LENGTH_SHORT).show();
-                else if(filecontent.isEmpty())
+                    filename = "未命名笔记";
+                if(filecontent.isEmpty())
                     Toast.makeText(getApplicationContext(), "内容不能为空", Toast.LENGTH_SHORT).show();
                 else {
                     String content = note_content.getText().toString();
@@ -136,21 +165,20 @@ public class NewNoteActivity extends AppCompatActivity {
                 AlertDialog.Builder builder = new AlertDialog.Builder(NewNoteActivity.this);
                 builder.setTitle("选择笔记本");
 
-//                String[] notebooks;
-//                int i = 0;
-//                SQLiteDatabase db = dbHelper.getReadableDatabase();
-//                Cursor c = db.query("note", null, null, null, null, null, "name ASC");
-//                if (c.moveToFirst())
-//                {
-//                    do
-//                    {
-//                        notebooks[i++] = c.getString(c.getColumnIndex("name"));
-//                    }
-//                    while (c.moveToNext());
-//                };
-
                 //    指定下拉列表的显示数据
-                final String[] notebooks = {"我的第一个笔记本", "学习", "工作", "其他"};
+                String[] notebooks;
+                int i = 0;
+                SQLiteDatabase db = MainActivity.dbHelper.getReadableDatabase();
+                Cursor c = db.query("note", null, null, null, null, null, "name ASC");
+                if (c.moveToFirst())
+                {
+                    do
+                    {
+                        notebooks[i++] = c.getString(c.getColumnIndex("name"));
+                    }
+                    while (c.moveToNext());
+                };
+
                 //    设置一个下拉的列表选择项
                 builder.setItems(notebooks, new DialogInterface.OnClickListener()
                 {
@@ -185,14 +213,14 @@ public class NewNoteActivity extends AppCompatActivity {
 
             }
         });
-        open.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(NewNoteActivity.this, CheckNote.class);
-                intent.putExtra("note", note_title.getText().toString());
-                startActivity(intent);
-            }
-        });
+//        open.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent intent = new Intent(NewNoteActivity.this, CheckNote.class);
+//                intent.putExtra("note", note_title.getText().toString());
+//                startActivity(intent);
+//            }
+//        });
         selectImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -255,29 +283,25 @@ public class NewNoteActivity extends AppCompatActivity {
     private void SaveNote(String name, String content) {
 
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String[] projection = {};
-        String selection = "name = ?";
-        String[] selectionArgs = {name};
-        Cursor c = db.query("note", projection, selection, selectionArgs, null, null, null);
-        if (c.moveToFirst())
-            Toast.makeText(getApplicationContext(), "已存在同名笔记", Toast.LENGTH_SHORT).show();
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("name", name);
+        contentValues.put("note_book", note_book);
+        contentValues.put("note_content", content);
+        contentValues.put("create_time", new Date().getTime());
+        if(isNew)
+            long newRowId = db.insert("note", null, contentValues);
+        else
+            long newRowId = db.update("note", contentValues, "id = ?", new String[]{note_id+""});
+        if (newRowId == -1)
+        {
+            Toast.makeText(getApplicationContext(), "保存失败，请重试", Toast.LENGTH_SHORT).show();
+        }
         else
         {
-            ContentValues contentValues = new ContentValues();
-            contentValues.put("name", name);
-            contentValues.put("note_book", note_book);
-            contentValues.put("note_content", content);
-            contentValues.put("create_time", new Date().getTime());
-            long newRowId = db.insert("note", null, contentValues);
-            if (newRowId == -1)
-            {
-                Toast.makeText(getApplicationContext(), "新建失败，请重试", Toast.LENGTH_SHORT).show();
-            }
-            else
-            {
-                Toast.makeText(getApplicationContext(), "保存成功", Toast.LENGTH_SHORT).show();
-            }
+            Toast.makeText(getApplicationContext(), "保存成功", Toast.LENGTH_SHORT).show();
         }
+
     }
 
     public void choosePhone(){
@@ -423,41 +447,15 @@ public class NewNoteActivity extends AppCompatActivity {
                     Toast.makeText(this,"程序崩溃",Toast.LENGTH_SHORT).show();
                 }
             }
-            else if (requestCode == REC) {
-                try {
-                    Uri recordUri = data.getData();
-                    if (recordUri != null)
-                        filepathes.add(getRealPathFromURI(recordUri));
-                    Uri uri = getDrawableURI(R.drawable.record_icon);
-                    Editable eb = note_content.getEditableText();
-                    // 获得光标所在位置
-                    int startPosition = note_content.getSelectionStart();
-                    eb.insert(
-                            startPosition,
-                            Html.fromHtml("<br/><a href='" + uri.toString()
-                                    + "'>录音文件<img src='" + uri.toString()
-                                    + "'/></a><br/>", imageGetter, null));
-//                    Bitmap pic = BitmapFactory.decodeResource(getResources(), R.drawable.record_icon);
-//                    ImageSpan imgSpan = new ImageSpan(this, pic);
-//                    String tempUrl = "<img src=\"" + getRealPathFromURI(uri) + "\" />";
-//                    SpannableString ss = new SpannableString(tempUrl);
-//                    // 依据Bitmap对象创建ImageSpan对象
-//                    ImageSpan span = new ImageSpan(this, pic);
-//                    // 用ImageSpan对象替换你指定的字符串
-//                    ss.setSpan(span, 0, tempUrl.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//                    insertIntoEditText(ss);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Toast.makeText(this,"程序崩溃",Toast.LENGTH_SHORT).show();
-                }
-            }
         }
     }
-    final Html.ImageGetter imageGetter = new Html.ImageGetter() {
-        public Drawable getDrawable(String source) {
-            Drawable drawable=null;
-            int rId=Integer.parseInt(source);
-            drawable=getResources().getDrawable(rId);
+    Html.ImageGetter imgGetter = new Html.ImageGetter()
+    {
+        public Drawable getDrawable(String source)
+        {
+            Log.e("CheckNote", source);
+            Drawable drawable = null;
+            drawable = Drawable.createFromPath(source);
             drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
             return drawable;
         }
@@ -524,37 +522,6 @@ public class NewNoteActivity extends AppCompatActivity {
 
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    class NoteDbHelper extends SQLiteOpenHelper
-    {
-        static final int DATABASE_VERSION = 1;
-        static final String DATABASE_NAME = "Note2.db";
-
-        NoteDbHelper(Context context)
-        {
-            super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        }
-
-        @Override
-        public void onCreate(SQLiteDatabase db)
-        {
-            String sql =
-                    "CREATE TABLE note (" +
-                            "name VARCHAR(20) PRIMARY KEY," +
-                            "note_book VARCHAR(20), "+
-                            "note_content TEXT)";
-            db.execSQL(sql);
-        }
-
-        @Override
-        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
-        {
-            String sql =
-                    "DROP TABLE IF EXISTS notebook";
-            db.execSQL(sql);
-            onCreate(db);
-        }
     }
 
     /** 从uri获取文件路径,uri以content开始 */
