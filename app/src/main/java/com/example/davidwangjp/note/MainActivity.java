@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     enum FragmentMode
     {
-        ALL_NOTES, NOTEBOOKS;
+        ALL_NOTES, NOTEBOOKS
     }
 
     final ArrayList<NoteCard> noteCards = new ArrayList<>();
@@ -202,7 +202,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }
                 else
+                {
+                    Intent intent = new Intent(MainActivity.this, NotebookActivity.class);
+                    intent.putExtra("noteId", -1);
+                    intent.putExtra("notebook", defaultNotebook);
                     Toast.makeText(getApplicationContext(), defaultNotebook, Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
 
@@ -983,6 +989,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             "name VARCHAR(20) PRIMARY KEY," +
                             "note_num INTEGER)";
             db.execSQL(sql);
+            sql =
+                    "CREATE TABLE note (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT,"+
+                            "name VARCHAR(20)," +
+                            "note_book VARCHAR(20), "+
+                            "note_content TEXT,"+
+                            "create_time INTEGER)";
+            db.execSQL(sql);
         }
 
         @Override
@@ -990,6 +1004,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         {
             String sql =
                     "DROP TABLE IF EXISTS notebook";
+            db.execSQL(sql);
+            sql =
+                    "DROP TABLE IF EXISTS note";
             db.execSQL(sql);
             onCreate(db);
         }
