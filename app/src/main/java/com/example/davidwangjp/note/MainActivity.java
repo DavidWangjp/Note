@@ -204,9 +204,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 else
                 {
-                    Intent intent = new Intent(MainActivity.this, NotebookActivity.class);
+                    Intent intent = new Intent(MainActivity.this, NewNoteActivity.class);
                     intent.putExtra("noteId", -1);
                     intent.putExtra("notebook", defaultNotebook);
+                    startActivity(intent);
                     Toast.makeText(getApplicationContext(), defaultNotebook, Toast.LENGTH_SHORT).show();
                 }
 
@@ -470,8 +471,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     int id = c.getInt(c.getColumnIndex("id"));
                     String title = c.getString(c.getColumnIndex("name"));
                     String content = c.getString(c.getColumnIndex("note_content"));
-                    int create_time = c.getInt(c.getColumnIndex("create_time"));
-                    String notebook = c.getString(c.getColumnIndex("notebook"));
+                    long create_time = c.getLong(c.getColumnIndex("create_time"));
+                    String notebook = c.getString(c.getColumnIndex("note_book"));
                     String date = new SimpleDateFormat("yyyy-MM-dd HH:mm")
                             .format(new Date(create_time));
                     date = date.split(" ")[0];
@@ -1046,7 +1047,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             "name VARCHAR(20)," +
                             "note_book VARCHAR(20), " +
                             "note_content TEXT," +
-                            "create_time INTEGER)";
+                            "create_time INTEGER," +
+                            "update_time INTEGER)";
             db.execSQL(sql);
         }
 
