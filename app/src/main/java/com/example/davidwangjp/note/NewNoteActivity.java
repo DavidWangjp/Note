@@ -44,6 +44,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -72,7 +73,7 @@ public class NewNoteActivity extends AppCompatActivity {
     private final int TAKE_PIC = 2;
     private final int REC = 3;
 
-    static NoteDbHelper dbHelper;
+    static MainActivity.DatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +97,7 @@ public class NewNoteActivity extends AppCompatActivity {
         isNew = (note_id < 0) ? true : false;
         note_book = intent.getStringExtra("notebook");
 
-        dbHelper = new NoteDbHelper(NewNoteActivity.this);
+        dbHelper = new MainActivity.DatabaseHelper(NewNoteActivity.this);
 
         confirm = (ImageButton)findViewById(R.id.image_button_confirm);
         selectImage = (ImageButton)findViewById(R.id.select_image);
@@ -289,10 +290,11 @@ public class NewNoteActivity extends AppCompatActivity {
         contentValues.put("note_book", note_book);
         contentValues.put("note_content", content);
         contentValues.put("create_time", new Date().getTime());
+        long newRowId;
         if(isNew)
-            long newRowId = db.insert("note", null, contentValues);
+            newRowId = db.insert("note", null, contentValues);
         else
-            long newRowId = db.update("note", contentValues, "id = ?", new String[]{note_id+""});
+            newRowId = db.update("note", contentValues, "id = ?", new String[]{note_id+""});
         if (newRowId == -1)
         {
             Toast.makeText(getApplicationContext(), "保存失败，请重试", Toast.LENGTH_SHORT).show();

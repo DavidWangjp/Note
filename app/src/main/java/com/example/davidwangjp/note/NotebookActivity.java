@@ -1,12 +1,11 @@
 package com.example.davidwangjp.note;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
-
-import com.getbase.floatingactionbutton.FloatingActionButton;
 
 public class NotebookActivity extends AppCompatActivity
 {
@@ -16,10 +15,10 @@ public class NotebookActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notebook);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        com.getbase.floatingactionbutton.FloatingActionButton newNote = (FloatingActionButton) findViewById(R.id.new_note_notebook);
+        com.getbase.floatingactionbutton.FloatingActionButton newNote = findViewById(R.id.new_note_notebook);
         newNote.setOnClickListener(new View.OnClickListener()
         {
             @Override

@@ -39,9 +39,11 @@ import android.widget.Toast;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -63,14 +65,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ALL_NOTES, NOTEBOOKS
     }
 
-    final ArrayList<NoteCard> noteCards = new ArrayList<>();
+    static final ArrayList<NoteCard> globalNoteCards = new ArrayList<>();
     static final ArrayList<NotebookCard> globalNotebookCards = new ArrayList<>();
 
-    static NotebookDbHelper dbHelper;
+    static DatabaseHelper dbHelper;
 
     static String defaultNotebook;
 
-    NoteSortMode noteSortMode = NoteSortMode.LATEST_MODIFY;
+    static NoteSortMode noteSortMode = NoteSortMode.LATEST_MODIFY;
     static NotebookSortMode notebookSortMode = NotebookSortMode.NAME;
     FragmentMode fragmentMode = FragmentMode.ALL_NOTES;
 
@@ -83,34 +85,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     RecyclerView.LayoutManager noteLayoutManager, notebookLayoutManager;
     Toolbar toolbar;
     FloatingActionsMenu newNoteMenu;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dbHelper = new NotebookDbHelper(MainActivity.this);
+        dbHelper = new DatabaseHelper(MainActivity.this);
 
         defaultNotebook = getDefaultNotebook();
 
 
+//        for (int i = 0; i < 50; i++)
+//        {
+//            Random random = new Random();
+//            globalNoteCards.add(new NoteCard("Title" + random.nextInt(50), "1/1/" + random.nextInt(30), "Content" + i));
+//        }
 
-        for (int i = 0; i < 50; i++)
-        {
-            Random random = new Random();
-            noteCards.add(new NoteCard("Title" + random.nextInt(50), "1/1/" + random.nextInt(30), "Content" + i));
-        }
-
-        /*for (int i = 0; i < 10; i++)
-        {
-            Random random = new Random();
-            globalNotebookCards.add(new NotebookCard("Name" + random.nextInt(10), random.nextInt(100)));
-        }*/
+//        for (int i = 0; i < 10; i++)
+//        {
+//            Random random = new Random();
+//            globalNotebookCards.add(new NotebookCard("Name" + random.nextInt(10), random.nextInt(100)));
+//        }
 
         noteRecyclerView = LayoutInflater.from(MainActivity.this).inflate(R.layout.note_list, null).findViewById(R.id.note_list);
         noteLayoutManager = new LinearLayoutManager(this);
         noteRecyclerView.setLayoutManager(noteLayoutManager);
-        noteAdapter = new NoteListAdapter(noteCards);
+        noteAdapter = new NoteListAdapter();
         noteAdapter.setOnItemClickListener(new NoteListAdapter.OnItemClickListener()
         {
             @Override
@@ -146,7 +148,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onItemClick(View view, int position)
             {
-
                 startActivity(new Intent(MainActivity.this, NotebookActivity.class));
             }
 
@@ -170,13 +171,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             transaction.add(R.id.fragment_container, noteListFragment).commit();
         }
 
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("所有笔记");
         setSupportActionBar(toolbar);
 
-        newNoteMenu = (FloatingActionsMenu) findViewById(R.id.floating_action_menu);
-        FloatingActionButton newNote = (FloatingActionButton) findViewById(R.id.new_note);
-        FloatingActionButton newMarkdown = (FloatingActionButton) findViewById(R.id.new_markdown);
+        newNoteMenu = findViewById(R.id.floating_action_menu);
+        FloatingActionButton newNote = findViewById(R.id.new_note);
+        FloatingActionButton newMarkdown = findViewById(R.id.new_markdown);
 
 
         newNote.setOnClickListener(new View.OnClickListener()
@@ -212,20 +213,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
 
     @Override
     public void onBackPressed()
     {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START))
         {
             drawer.closeDrawer(GravityCompat.START);
@@ -324,7 +325,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 for (int i = 0; i < noteAdapter.noteCards.size(); i++)
                 {
                     if (noteAdapter.ifPositionSelected.get(i))
+                    {
                         noteAdapter.noteCards.remove(i);
+
+                    }
                 }
                 noteAdapter.clearAll();
                 noteAdapter.notifyDataSetChanged();
@@ -444,9 +448,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
+        void getNoteData()
+        {
+            globalNoteCards.clear();
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            String sortOrder = null;
+            switch (noteSortMode)
+            {
+                case LATEST_MODIFY:
+                    sortOrder = "create_time ASC";
+                    break;
+                case TITLE:
+                    sortOrder = "name ASC";
+                    break;
+            }
+            Cursor c = db.query("note", null, null, null, null, null, sortOrder);
+            if (c.moveToFirst())
+            {
+                do
+                {
+                    int id = c.getInt(c.getColumnIndex("id"));
+                    String title = c.getString(c.getColumnIndex("name"));
+                    String content = c.getString(c.getColumnIndex("note_content"));
+                    int create_time = c.getInt(c.getColumnIndex("create_time"));
+                    String notebook = c.getString(c.getColumnIndex("notebook"));
+                    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm")
+                            .format(new Date(create_time));
+                    date = date.split(" ")[0];
+                    globalNoteCards.add(new NoteCard(id, title, date, content, notebook));
+                }
+                while (c.moveToNext());
+            }
+
+            this.noteCards = (ArrayList<NoteCard>) globalNoteCards.clone();
+            for (int i = 0; i < noteCards.size(); i++)
+                ifPositionSelected.put(i, false);
+            this.notifyDataSetChanged();
+        }
+
+        NoteListAdapter()
+        {
+            getNoteData();
+        }
+
         NoteListAdapter(ArrayList<NoteCard> noteCards)
         {
-            this.noteCards = (ArrayList<NoteCard>) noteCards.clone();
+            this.noteCards = noteCards;
             for (int i = 0; i < noteCards.size(); i++)
                 ifPositionSelected.put(i, false);
         }
@@ -944,17 +991,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         editor.apply();
     }
 
-    class NoteCard
+    static class NoteCard
     {
+        int id;
         String title;
         String date;
         String content;
+        String notebook;
 
-        NoteCard(String title, String date, String content)
+        NoteCard(int id, String title, String date, String content, String notebook)
         {
+            this.id = id;
             this.title = title;
             this.date = date;
             this.content = content;
+            this.notebook = notebook;
         }
 
     }
@@ -971,12 +1022,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    class NotebookDbHelper extends SQLiteOpenHelper
+    static class DatabaseHelper extends SQLiteOpenHelper
     {
         static final int DATABASE_VERSION = 1;
         static final String DATABASE_NAME = "Note.db";
 
-        NotebookDbHelper(Context context)
+        DatabaseHelper(Context context)
         {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
@@ -991,10 +1042,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             db.execSQL(sql);
             sql =
                     "CREATE TABLE note (" +
-                            "id INTEGER PRIMARY KEY AUTOINCREMENT,"+
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                             "name VARCHAR(20)," +
-                            "note_book VARCHAR(20), "+
-                            "note_content TEXT,"+
+                            "note_book VARCHAR(20), " +
+                            "note_content TEXT," +
                             "create_time INTEGER)";
             db.execSQL(sql);
         }
