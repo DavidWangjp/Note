@@ -329,7 +329,6 @@ public class NewNoteActivity extends AppCompatActivity {
         {
             Toast.makeText(getApplicationContext(), "保存成功", Toast.LENGTH_SHORT).show();
         }
-
     }
 
     public void choosePhone(){
