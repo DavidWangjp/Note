@@ -61,7 +61,7 @@ public class CheckNote extends AppCompatActivity
         db.close();
     }
 
-    Html.ImageGetter imgGetter = new Html.ImageGetter()
+    static Html.ImageGetter imgGetter = new Html.ImageGetter()
     {
         public Drawable getDrawable(String source)
         {

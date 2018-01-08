@@ -24,6 +24,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,13 +47,12 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
 {
     enum NoteSortMode
     {
-        LATEST_MODIFY, TITLE
+        LATEST_MODIFY, TITLE, CREATE_DATE
     }
 
     enum NotebookSortMode
@@ -82,7 +82,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static NoteListAdapter noteAdapter;
     static NotebookListAdapter notebookAdapter;
 
-    RecyclerView.LayoutManager noteLayoutManager, notebookLayoutManager;
     Toolbar toolbar;
     FloatingActionsMenu newNoteMenu;
 
@@ -110,8 +109,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //        }
 
         noteRecyclerView = LayoutInflater.from(MainActivity.this).inflate(R.layout.note_list, null).findViewById(R.id.note_list);
-        noteLayoutManager = new LinearLayoutManager(this);
-        noteRecyclerView.setLayoutManager(noteLayoutManager);
+        noteRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         noteAdapter = new NoteListAdapter();
         noteAdapter.setOnItemClickListener(new NoteListAdapter.OnItemClickListener()
         {
@@ -121,7 +119,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (noteAdapter.isMultiSelect)
                     noteAdapter.selectItem(position);
                 else
-                    Toast.makeText(getApplicationContext(), noteAdapter.noteCards.get(position).content, Toast.LENGTH_SHORT).show();
+                {
+                    Intent intent = new Intent(MainActivity.this, NewNoteActivity.class);
+                    intent.putExtra("noteId", noteAdapter.noteCards.get(position).id);
+                    intent.putExtra("notebook", noteAdapter.noteCards.get(position).notebook);
+                    startActivity(intent);
+                }
             }
 
             @Override
@@ -140,8 +143,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         noteRecyclerView.setAdapter(noteAdapter);
 
         notebookRecyclerView = LayoutInflater.from(MainActivity.this).inflate(R.layout.notebook_list, null).findViewById(R.id.notebook_list);
-        notebookLayoutManager = new LinearLayoutManager(this);
-        notebookRecyclerView.setLayoutManager(notebookLayoutManager);
+        notebookRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         notebookAdapter = new NotebookListAdapter();
         notebookAdapter.setOnItemClickListener(new NotebookListAdapter.OnItemClickListener()
         {
@@ -332,7 +334,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     {
 //                        noteAdapter.noteCards.remove(i);
                         int noteId = noteAdapter.noteCards.get(i).id;
-                        db.delete("note", "name = ?", new String[]{String.valueOf(noteId)});
+                        db.delete("note", "id = ?", new String[]{String.valueOf(noteId)});
 
                     }
                 }
@@ -438,7 +440,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         {
             CardView noteCard;
             TextView title;
-            TextView date;
+            TextView createDate;
+            TextView updateDate;
             TextView content;
             LinearLayout linearLayout;
             CheckBox checkBox;
@@ -448,7 +451,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 super(v);
                 noteCard = v;
                 title = v.findViewById(R.id.note_title);
-                date = v.findViewById(R.id.note_date);
+                createDate = v.findViewById(R.id.note_date);
+                updateDate = v.findViewById(R.id.note_update);
                 content = v.findViewById(R.id.note_content);
                 linearLayout = v.findViewById(R.id.note_card_background);
                 checkBox = v.findViewById(R.id.note_card_checkbox);
@@ -463,10 +467,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             switch (noteSortMode)
             {
                 case LATEST_MODIFY:
-                    sortOrder = "create_time ASC";
+                    sortOrder = "update_time DESC";
                     break;
                 case TITLE:
                     sortOrder = "name ASC";
+                    break;
+                case CREATE_DATE:
+                    sortOrder = "create_time DESC";
                     break;
             }
             Cursor c = db.query("note", null, null, null, null, null, sortOrder);
@@ -477,16 +484,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     int id = c.getInt(c.getColumnIndex("id"));
                     String title = c.getString(c.getColumnIndex("name"));
                     String content = c.getString(c.getColumnIndex("note_content"));
-                    long create_time = c.getLong(c.getColumnIndex("create_time"));
+                    long createTime = c.getLong(c.getColumnIndex("create_time"));
+                    int updateTime = c.getInt(c.getColumnIndex("update_time"));
                     String notebook = c.getString(c.getColumnIndex("note_book"));
-                    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm")
-                            .format(new Date(create_time));
-                    date = date.split(" ")[0];
-                    globalNoteCards.add(new NoteCard(id, title, date, content, notebook));
+                    String createDate = new SimpleDateFormat("yyyy-MM-dd HH:mm")
+                            .format(new Date(createTime));
+                    String updateDate = new SimpleDateFormat("yyyy-MM-dd HH:mm")
+                            .format(new Date(updateTime));
+                    createDate = createDate.split(" ")[0];
+                    updateDate = updateDate.split(" ")[0];
+                    globalNoteCards.add(new NoteCard(id, title, createDate, updateDate, content, notebook));
                 }
                 while (c.moveToNext());
             }
-
+            c.close();
             this.noteCards = (ArrayList<NoteCard>) globalNoteCards.clone();
             for (int i = 0; i < noteCards.size(); i++)
                 ifPositionSelected.put(i, false);
@@ -516,8 +527,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void onBindViewHolder(ViewHolder holder, final int position)
         {
             holder.title.setText(noteCards.get(position).title);
-            holder.date.setText(noteCards.get(position).date);
-            holder.content.setText(noteCards.get(position).content);
+            holder.createDate.setText(noteCards.get(position).createDate);
+            holder.updateDate.setText(noteCards.get(position).updateTime);
+//            holder.content.setText(noteCards.get(position).content);
+            holder.content.setText(Html.fromHtml(noteCards.get(position).content, CheckNote.imgGetter, null));
 
             if (isMultiSelect)
                 holder.checkBox.setVisibility(View.VISIBLE);
@@ -711,7 +724,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     AlertDialog.Builder setChangeNoteSortingWayDialog()
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        String[] sortingWays = {"创建时间", "标题"};
+        String[] sortingWays = {"最后修改时间", "标题", "创建日期"};
         builder.setTitle("排序方式");
         builder.setSingleChoiceItems(sortingWays, noteSortMode.ordinal(), new DialogInterface.OnClickListener()
         {
@@ -727,7 +740,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             @Override
                             public int compare(NoteCard o1, NoteCard o2)
                             {
-                                return o1.date.compareTo(o2.date);
+                                return o2.updateTime.compareTo(o1.updateTime);
                             }
                         });
                         noteAdapter.notifyDataSetChanged();
@@ -740,6 +753,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             public int compare(NoteCard o1, NoteCard o2)
                             {
                                 return o1.title.compareTo(o2.title);
+                            }
+                        });
+                        noteAdapter.notifyDataSetChanged();
+                        break;
+                    case 2:
+                        noteSortMode = NoteSortMode.LATEST_MODIFY;
+                        Collections.sort(noteAdapter.noteCards, new Comparator<NoteCard>()
+                        {
+                            @Override
+                            public int compare(NoteCard o1, NoteCard o2)
+                            {
+                                return o2.createDate.compareTo(o1.createDate);
                             }
                         });
                         noteAdapter.notifyDataSetChanged();
@@ -858,7 +883,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             setDefaultNotebook("");
                         defaultNotebook = getDefaultNotebook();
                         SQLiteDatabase db = dbHelper.getReadableDatabase();
+                        db.delete("note", "note_book = ?", new String[]{name});
                         db.delete("notebook", "name = ?", new String[]{name});
+                        noteAdapter.getNoteData();
                         notebookAdapter.getNotebookData();
                         //notebookAdapter.notifyDataSetChanged();
                         break;
@@ -1002,15 +1029,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     {
         int id;
         String title;
-        String date;
+        String createDate;
+        String updateTime;
         String content;
         String notebook;
 
-        NoteCard(int id, String title, String date, String content, String notebook)
+        NoteCard(int id, String title, String createDate, String updateTime, String content, String notebook)
         {
             this.id = id;
             this.title = title;
-            this.date = date;
+            this.createDate = createDate;
+            this.updateTime = updateTime;
             this.content = content;
             this.notebook = notebook;
         }

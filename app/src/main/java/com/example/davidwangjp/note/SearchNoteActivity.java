@@ -200,7 +200,7 @@ public class SearchNoteActivity extends AppCompatActivity
                             @Override
                             public int compare(MainActivity.NoteCard o1, MainActivity.NoteCard o2)
                             {
-                                return o1.date.compareTo(o2.date);
+                                return o1.createDate.compareTo(o2.createDate);
                             }
                         });
                         noteAdapter.notifyDataSetChanged();
