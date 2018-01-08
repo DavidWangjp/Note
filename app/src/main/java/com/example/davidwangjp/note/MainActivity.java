@@ -47,6 +47,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
 {
@@ -335,9 +336,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //                        noteAdapter.noteCards.remove(i);
                         int noteId = noteAdapter.noteCards.get(i).id;
                         db.delete("note", "id = ?", new String[]{String.valueOf(noteId)});
+                        for (NotebookCard notebookCard : notebookAdapter.notebookCards)
+                        {
+                            if (Objects.equals(notebookCard.name, noteAdapter.noteCards.get(i).notebook))
+                            {
+                                ContentValues contentValues = new ContentValues();
+                                contentValues.put("name", notebookCard.name);
+                                contentValues.put("note_num", notebookCard.noteNum - 1);
+                                db.update("notebook", contentValues, "name = ?", new String[]{notebookCard.name});
+                                break;
+                            }
+                        }
 
                     }
                 }
+                notebookAdapter.getNotebookData();
                 noteAdapter.getNoteData();
                 noteAdapter.clearAll();
                 noteAdapter.notifyDataSetChanged();
@@ -485,7 +498,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String title = c.getString(c.getColumnIndex("name"));
                     String content = c.getString(c.getColumnIndex("note_content"));
                     long createTime = c.getLong(c.getColumnIndex("create_time"));
-                    int updateTime = c.getInt(c.getColumnIndex("update_time"));
+                    long updateTime = c.getLong(c.getColumnIndex("update_time"));
                     String notebook = c.getString(c.getColumnIndex("note_book"));
                     String createDate = new SimpleDateFormat("yyyy-MM-dd HH:mm")
                             .format(new Date(createTime));
