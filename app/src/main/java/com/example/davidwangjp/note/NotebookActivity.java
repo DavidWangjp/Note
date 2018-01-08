@@ -18,6 +18,10 @@ public class NotebookActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        Intent intent = getIntent();
+        String notebookName = intent.getStringExtra("notebook_name");
+        Toast.makeText(getApplicationContext(), notebookName, Toast.LENGTH_SHORT).show();
+
         com.getbase.floatingactionbutton.FloatingActionButton newNote = findViewById(R.id.new_note_notebook);
         newNote.setOnClickListener(new View.OnClickListener()
         {

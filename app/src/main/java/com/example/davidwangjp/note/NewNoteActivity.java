@@ -98,7 +98,7 @@ public class NewNoteActivity extends AppCompatActivity {
         Intent intent = getIntent();
         note_id = intent.getIntExtra("noteId",-1);
         Log.e("NewNoteActivity","noteID:"+note_id);
-        isNew = (note_id < 0) ? true : false;
+        isNew = note_id < 0;
         note_book = intent.getStringExtra("notebook");
 
         dbHelper = new MainActivity.DatabaseHelper(NewNoteActivity.this);
@@ -312,7 +312,7 @@ public class NewNoteActivity extends AppCompatActivity {
         Cursor c = db.query("notebook", projection, selection, selectionArgs, null, null, null);
         if (c.moveToNext())
         {
-            note_num = c.getInt(c.getColumnIndex("name"));
+            note_num = c.getInt(c.getColumnIndex("note_num"));
             ContentValues cv2 = new ContentValues();
             cv2.put("note_num",note_num + 1);
             Log.e("NewNoteActivity",""+note_num);

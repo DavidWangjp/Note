@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     NotebookListFragment notebookListFragment = new NotebookListFragment();
     static RecyclerView noteRecyclerView, notebookRecyclerView;
     static NoteListAdapter noteAdapter;
-    NotebookListAdapter notebookAdapter;
+    static NotebookListAdapter notebookAdapter;
 
     RecyclerView.LayoutManager noteLayoutManager, notebookLayoutManager;
     Toolbar toolbar;
@@ -148,7 +148,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onItemClick(View view, int position)
             {
-                startActivity(new Intent(MainActivity.this, NotebookActivity.class));
+                Intent intent = new Intent(MainActivity.this, NotebookActivity.class);
+                intent.putExtra("notebook_name", notebookAdapter.notebookCards.get(position).name);
+                startActivity(intent);
             }
 
             @Override
@@ -323,14 +325,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.action_settings:
                 return true;
             case R.id.action_delete_note:
+                SQLiteDatabase db = dbHelper.getReadableDatabase();
                 for (int i = 0; i < noteAdapter.noteCards.size(); i++)
                 {
                     if (noteAdapter.ifPositionSelected.get(i))
                     {
-                        noteAdapter.noteCards.remove(i);
+//                        noteAdapter.noteCards.remove(i);
+                        int noteId = noteAdapter.noteCards.get(i).id;
+                        db.delete("note", "name = ?", new String[]{String.valueOf(noteId)});
 
                     }
                 }
+                noteAdapter.getNoteData();
                 noteAdapter.clearAll();
                 noteAdapter.notifyDataSetChanged();
                 return true;
