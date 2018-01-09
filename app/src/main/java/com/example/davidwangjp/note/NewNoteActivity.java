@@ -86,14 +86,14 @@ public class NewNoteActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
 
         Intent intent = getIntent();
         note_id = intent.getIntExtra("noteId",-1);
@@ -132,7 +132,9 @@ public class NewNoteActivity extends AppCompatActivity {
                 Log.e("NewNoteActivity",update_time);
 
                 String content = c.getString(c.getColumnIndex("note_content"));
+
                 note_content.setText(Html.fromHtml(content, imgGetter, null));
+                Log.e("note_content",note_content.getText().toString());
 
                 String title = c.getString(c.getColumnIndex("name"));
                 note_title.setText(title);
@@ -302,23 +304,26 @@ public class NewNoteActivity extends AppCompatActivity {
         if(isNew) {
             contentValues.put("create_time", new Date().getTime());
             newRowId = db.insert("note", null, contentValues);
+            String[] projection = {};
+            String selection = "name = ?";
+            String[] selectionArgs = {note_book};
+            Cursor c = db.query("notebook", projection, selection, selectionArgs, null, null, null);
+            if (c.moveToNext())
+            {
+                note_num = c.getInt(c.getColumnIndex("note_num"));
+                ContentValues cv2 = new ContentValues();
+                cv2.put("note_num",note_num + 1);
+                Log.e("NewNoteActivity",""+note_num);
+                db.update("notebook", cv2, "name = ?", new String[]{note_book});
+            }
+            c.close();
         }
         else
             newRowId = db.update("note", contentValues, "id = ?", new String[]{note_id+""});
 
-        String[] projection = {};
-        String selection = "name = ?";
-        String[] selectionArgs = {note_book};
-        Cursor c = db.query("notebook", projection, selection, selectionArgs, null, null, null);
-        if (c.moveToNext())
-        {
-            note_num = c.getInt(c.getColumnIndex("note_num"));
-            ContentValues cv2 = new ContentValues();
-            cv2.put("note_num",note_num + 1);
-            Log.e("NewNoteActivity",""+note_num);
-            db.update("notebook", cv2, "name = ?", new String[]{note_book});
-        }
-        c.close();
+        MainActivity.notebookAdapter.getNotebookData();
+        MainActivity.noteAdapter.getNoteData();
+
         db.close();
 
         if (newRowId == -1)
