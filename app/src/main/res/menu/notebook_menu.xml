@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/notebook_search_note"
+        android:icon="@drawable/ic_search_api_material"
+        android:title="@string/search_note"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/notebook_delete_note"
+        android:title="@string/delete_note"
+        android:icon="@drawable/ic_clear_material"
+        app:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/notebook_note_sorting_way"
+        android:title="@string/sorting_way"
+        app:showAsAction="never"/>
+
+</menu>

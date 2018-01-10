@@ -182,7 +182,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         newNoteMenu = findViewById(R.id.floating_action_menu);
         FloatingActionButton newNote = findViewById(R.id.new_note);
-        FloatingActionButton newMarkdown = findViewById(R.id.new_markdown);
 
 
         newNote.setOnClickListener(new View.OnClickListener()
@@ -333,7 +332,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 {
                     if (noteAdapter.ifPositionSelected.get(i))
                     {
-//                        noteAdapter.noteCards.remove(i);
                         int noteId = noteAdapter.noteCards.get(i).id;
                         db.delete("note", "id = ?", new String[]{String.valueOf(noteId)});
                         for (NotebookCard notebookCard : notebookAdapter.notebookCards)
@@ -418,7 +416,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.setting:
                 startActivity(new Intent(MainActivity.this, SettingActivity.class));
         }
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }

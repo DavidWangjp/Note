@@ -9,4 +9,12 @@
     tools:context="com.example.davidwangjp.note.NotebookActivity"
     tools:showIn="@layout/activity_notebook">
 
+    <FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/notebook_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        />
+
 </android.support.constraint.ConstraintLayout>

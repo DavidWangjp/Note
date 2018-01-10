@@ -1,7 +1,10 @@
 package com.example.davidwangjp.note;
 
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -21,6 +24,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Objects;
 
 public class SearchNoteActivity extends AppCompatActivity
 {
@@ -31,12 +35,17 @@ public class SearchNoteActivity extends AppCompatActivity
     ArrayList<MainActivity.NoteCard> noteCards = MainActivity.noteAdapter.noteCards;
     MainActivity.NoteSortMode noteSortMode = MainActivity.NoteSortMode.LATEST_MODIFY;
 
+    String notebookName;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_note);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.search_note_toolbar);
+
+        notebookName = getIntent().getStringExtra("notebook_name");
+
+        Toolbar toolbar = findViewById(R.id.search_note_toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -54,7 +63,12 @@ public class SearchNoteActivity extends AppCompatActivity
                 if (noteAdapter.isMultiSelect)
                     noteAdapter.selectItem(position);
                 else
-                    Toast.makeText(getApplicationContext(), noteAdapter.noteCards.get(position).content, Toast.LENGTH_SHORT).show();
+                {
+                    Intent intent = new Intent(SearchNoteActivity.this, NewNoteActivity.class);
+                    intent.putExtra("noteId", noteAdapter.noteCards.get(position).id);
+                    intent.putExtra("notebook", noteAdapter.noteCards.get(position).notebook);
+                    startActivity(intent);
+                }
             }
 
             @Override
@@ -100,9 +114,19 @@ public class SearchNoteActivity extends AppCompatActivity
             {
                 Toast.makeText(getApplicationContext(), query, Toast.LENGTH_SHORT).show();
                 noteAdapter.noteCards.clear();
-                for (MainActivity.NoteCard noteCard:noteCards)
-                    if (noteCard.title.contains(query) || noteCard.content.contains(query))
-                        noteAdapter.noteCards.add(noteCard);
+                if (!notebookName.isEmpty())
+                {
+                    for (MainActivity.NoteCard noteCard : noteCards)
+                        if (noteCard.title.contains(query) || noteCard.content.contains(query))
+                            noteAdapter.noteCards.add(noteCard);
+                }
+                else
+                {
+                    for (MainActivity.NoteCard noteCard : noteCards)
+                        if ((noteCard.title.contains(query) || noteCard.content.contains(query))
+                                && noteCard.notebook.equals(notebookName))
+                            noteAdapter.noteCards.add(noteCard);
+                }
                 noteAdapter.notifyDataSetChanged();
                 return false;
             }
@@ -129,12 +153,8 @@ public class SearchNoteActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         switch (id)
         {
             case R.id.set_sorting_way_search_note:
@@ -142,13 +162,31 @@ public class SearchNoteActivity extends AppCompatActivity
                 builder.create().show();
                 return true;
             case R.id.action_delete_note_search_note:
+                SQLiteDatabase db = MainActivity.dbHelper.getReadableDatabase();
                 for (int i = 0; i < noteAdapter.noteCards.size(); i++)
                 {
                     if (noteAdapter.ifPositionSelected.get(i))
+                    {
                         noteAdapter.noteCards.remove(i);
+                        int noteId = noteAdapter.noteCards.get(i).id;
+                        db.delete("note", "id = ?", new String[]{String.valueOf(noteId)});
+                        for (MainActivity.NotebookCard notebookCard : MainActivity.notebookAdapter.notebookCards)
+                        {
+                            if (Objects.equals(notebookCard.name, noteAdapter.noteCards.get(i).notebook))
+                            {
+                                ContentValues contentValues = new ContentValues();
+                                contentValues.put("name", notebookCard.name);
+                                contentValues.put("note_num", notebookCard.noteNum - 1);
+                                db.update("notebook", contentValues, "name = ?", new String[]{notebookCard.name});
+                                break;
+                            }
+                        }
+
+                    }
                 }
+                MainActivity.notebookAdapter.getNotebookData();
+                MainActivity.noteAdapter.getNoteData();
                 noteAdapter.clearAll();
-                noteAdapter.notifyDataSetChanged();
                 return true;
         }
 
@@ -184,7 +222,7 @@ public class SearchNoteActivity extends AppCompatActivity
     AlertDialog.Builder setChangeSortingWayDialog()
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(SearchNoteActivity.this);
-        String[] sortingWays = {"创建时间", "标题"};
+        String[] sortingWays = {"最后修改时间", "标题", "创建日期"};
         builder.setTitle("排序方式");
         builder.setSingleChoiceItems(sortingWays, noteSortMode.ordinal(), new DialogInterface.OnClickListener()
         {
@@ -200,7 +238,7 @@ public class SearchNoteActivity extends AppCompatActivity
                             @Override
                             public int compare(MainActivity.NoteCard o1, MainActivity.NoteCard o2)
                             {
-                                return o1.createDate.compareTo(o2.createDate);
+                                return o2.updateTime.compareTo(o1.updateTime);
                             }
                         });
                         noteAdapter.notifyDataSetChanged();
@@ -217,8 +255,19 @@ public class SearchNoteActivity extends AppCompatActivity
                         });
                         noteAdapter.notifyDataSetChanged();
                         break;
+                    case 2:
+                        noteSortMode = MainActivity.NoteSortMode.LATEST_MODIFY;
+                        Collections.sort(noteAdapter.noteCards, new Comparator<MainActivity.NoteCard>()
+                        {
+                            @Override
+                            public int compare(MainActivity.NoteCard o1, MainActivity.NoteCard o2)
+                            {
+                                return o2.createDate.compareTo(o1.createDate);
+                            }
+                        });
+                        noteAdapter.notifyDataSetChanged();
+                        break;
                 }
-                Toast.makeText(getApplicationContext(), "" + which, Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });
