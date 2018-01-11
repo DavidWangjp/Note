@@ -31,8 +31,10 @@ import android.text.Editable;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ImageSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -59,10 +61,12 @@ public class NewNoteActivity extends AppCompatActivity {
     private ImageButton record_button;
     private EditText note_title;
     private EditText note_content;
+    private PerformEdit mPerformEdit;
     private TextView notebook;
     private Button markdown;
     private Button preview;
     private Button open;
+    private Button redo, undo, bold;
     private String note_book;
     private int mImgViewWidth;
     private Uri imageUri;
@@ -86,15 +90,6 @@ public class NewNoteActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
-
         Intent intent = getIntent();
         note_id = intent.getIntExtra("noteId",-1);
         Log.e("NewNoteActivity","noteID:"+note_id);
@@ -113,9 +108,14 @@ public class NewNoteActivity extends AppCompatActivity {
         markdown = (Button)findViewById(R.id.markdown);
         preview = (Button)findViewById(R.id.preview);
         open = (Button)findViewById(R.id.open_note);
+        redo = (Button)findViewById(R.id.redo);
+        undo = (Button)findViewById(R.id.undo);
+        bold = (Button)findViewById(R.id.bold);
+
 
         notebook.setText(note_book);
-        note_content.setMovementMethod(ScrollingMovementMethod.getInstance());// 设置可滚动
+        //note_content.setMovementMethod(ScrollingMovementMethod.getInstance());// 设置可滚动
+        mPerformEdit = new PerformEdit(note_content);
 
         if(!isNew)
         {
@@ -203,34 +203,30 @@ public class NewNoteActivity extends AppCompatActivity {
             }
         });
 
-        markdown.setOnClickListener(new View.OnClickListener() {
+        redo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(preview.getVisibility()==View.INVISIBLE)
-                    preview.setVisibility(View.VISIBLE);
-                else
-                    preview.setVisibility(View.INVISIBLE);
+                mPerformEdit.redo();
             }
         });
 
-        preview.setOnClickListener(new View.OnClickListener() {
+        undo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String s = note_content.getText().toString();
-                Intent intent = new Intent(NewNoteActivity.this, MarkDown.class);
-                intent.putExtra("data", s);
-                startActivity(intent);
-
+                mPerformEdit.undo();
             }
         });
-//        open.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Intent intent = new Intent(NewNoteActivity.this, CheckNote.class);
-//                intent.putExtra("note", note_title.getText().toString());
-//                startActivity(intent);
-//            }
-//        });
+
+        bold.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SpannableStringBuilder ss = new SpannableStringBuilder(note_content.getText());
+                ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD),note_content.getSelectionStart(),note_content.getSelectionEnd(),Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                note_content.setText(ss);
+            }
+        });
+
+
         selectImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -243,13 +239,11 @@ public class NewNoteActivity extends AppCompatActivity {
                 takePhone();
             }
         });
-        record_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                record();
-            }
-        });
+//        record_button.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {record();
+//            }
+//        });
     }
 
 
@@ -317,6 +311,7 @@ public class NewNoteActivity extends AppCompatActivity {
                 db.update("notebook", cv2, "name = ?", new String[]{note_book});
             }
             c.close();
+            isNew = false;
         }
         else
             newRowId = db.update("note", contentValues, "id = ?", new String[]{note_id+""});
@@ -428,23 +423,6 @@ public class NewNoteActivity extends AppCompatActivity {
         startActivityForResult(intent, TAKE_PIC);
 
     }
-    public void  record()
-    {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    REC);
-
-        }else {
-            // 调用Android自带的音频录制应用
-            Intent intent = new Intent(
-                    MediaStore.Audio.Media.RECORD_SOUND_ACTION);
-            startActivityForResult(intent, REC);
-        }
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -481,11 +459,11 @@ public class NewNoteActivity extends AppCompatActivity {
             }
         }
     }
-    Html.ImageGetter imgGetter = new Html.ImageGetter()
+    static Html.ImageGetter imgGetter = new Html.ImageGetter()
     {
         public Drawable getDrawable(String source)
         {
-            Log.e("CheckNote", source);
+            Log.e("source", source);
             Drawable drawable = null;
             drawable = Drawable.createFromPath(source);
             drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());

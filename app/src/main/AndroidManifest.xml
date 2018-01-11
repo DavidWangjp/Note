@@ -50,7 +50,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".MarkDown"/>
-        <activity android:name=".CheckNote"/>
     </application>
 
 </manifest>

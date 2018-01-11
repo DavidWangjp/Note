@@ -541,7 +541,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             holder.createDate.setText(noteCards.get(position).createDate);
             holder.updateDate.setText(noteCards.get(position).updateTime);
 //            holder.content.setText(noteCards.get(position).content);
-            holder.content.setText(Html.fromHtml(noteCards.get(position).content, CheckNote.imgGetter, null));
+            holder.content.setText(Html.fromHtml(noteCards.get(position).content, NewNoteActivity.imgGetter, null));
 
             if (isMultiSelect)
                 holder.checkBox.setVisibility(View.VISIBLE);
@@ -937,7 +937,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TextView textView = view.findViewById(R.id.dialog_edit);
         textView.setHint("笔记本名称");
         builder.setView(view);
-        builder.setTitle("新建笔记");
+        builder.setTitle("新建笔记本");
         builder.setPositiveButton("确定", null);
         builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
         {
