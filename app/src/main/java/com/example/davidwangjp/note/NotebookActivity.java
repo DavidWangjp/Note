@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import static com.example.davidwangjp.note.MainActivity.dbHelper;
+
 
 public class NotebookActivity extends AppCompatActivity
 {
@@ -36,10 +38,10 @@ public class NotebookActivity extends AppCompatActivity
 
     NoteListFragment noteListFragment = new NoteListFragment();
     static RecyclerView noteRecyclerView;
-    MainActivity.NoteListAdapter noteListAdapter = new MainActivity.NoteListAdapter(new ArrayList<MainActivity.NoteCard>());
+    static MainActivity.NoteListAdapter noteListAdapter = new MainActivity.NoteListAdapter(new ArrayList<MainActivity.NoteCard>());
 
     NoteSortMode noteSortMode = NoteSortMode.LATEST_MODIFY;
-    String notebookName;
+    static String notebookName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -48,14 +50,13 @@ public class NotebookActivity extends AppCompatActivity
         setContentView(R.layout.activity_notebook);
 
         notebookName = getIntent().getStringExtra("notebook_name");
+        noteListAdapter.isMultiSelect = false;
 
         Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle(notebookName);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(notebookName);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-        Toast.makeText(getApplicationContext(), notebookName, Toast.LENGTH_SHORT).show();
+        //getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         noteRecyclerView = LayoutInflater.from(NotebookActivity.this).inflate(R.layout.note_list, null).findViewById(R.id.note_list);
         noteRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -137,10 +138,8 @@ public class NotebookActivity extends AppCompatActivity
     @Override
     public boolean onPrepareOptionsMenu(Menu menu)
     {
-        if (noteListAdapter.isMultiSelect)
-            menu.findItem(R.id.notebook_delete_note).setVisible(true);
-        else
-            menu.findItem(R.id.notebook_delete_note).setVisible(false);
+        menu.findItem(R.id.notebook_delete_note).setVisible(noteListAdapter.isMultiSelect);
+        menu.findItem(R.id.notebook_move_note).setVisible(noteListAdapter.isMultiSelect);
 
         return super.onPrepareOptionsMenu(menu);
     }
@@ -159,7 +158,8 @@ public class NotebookActivity extends AppCompatActivity
         switch (id)
         {
             case R.id.notebook_delete_note:
-                SQLiteDatabase db = MainActivity.dbHelper.getReadableDatabase();
+                SQLiteDatabase db = dbHelper.getReadableDatabase();
+                Toast.makeText(getApplicationContext(), "" + 1, Toast.LENGTH_SHORT).show();
                 for (int i = 0; i < noteListAdapter.noteCards.size(); i++)
                 {
                     if (noteListAdapter.ifPositionSelected.get(i))
@@ -172,7 +172,8 @@ public class NotebookActivity extends AppCompatActivity
                             {
                                 ContentValues contentValues = new ContentValues();
                                 contentValues.put("name", notebookCard.name);
-                                contentValues.put("note_num", notebookCard.noteNum - 1);
+                                notebookCard.noteNum -= 1;
+                                contentValues.put("note_num", notebookCard.noteNum);
                                 db.update("notebook", contentValues, "name = ?", new String[]{notebookCard.name});
                                 break;
                             }
@@ -189,6 +190,60 @@ public class NotebookActivity extends AppCompatActivity
                 noteListAdapter.clearAll();
                 noteListAdapter.notifyDataSetChanged();
                 return true;
+            case R.id.notebook_move_note:
+            {
+                final String[] moveToNotebook = new String[1];
+                AlertDialog.Builder builder = new AlertDialog.Builder(NotebookActivity.this);
+                final String[] notebookNames = new String[MainActivity.globalNotebookCards.size()];
+                for (int i = 0; i < MainActivity.globalNotebookCards.size(); i++)
+                    notebookNames[i] = MainActivity.globalNotebookCards.get(i).name;
+                builder.setTitle("移动至");
+                builder.setItems(notebookNames, new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        moveToNotebook[0] = notebookNames[which];
+                        SQLiteDatabase db = dbHelper.getReadableDatabase();
+                        for (int i = 0; i < noteListAdapter.noteCards.size(); i++)
+                        {
+                            if (noteListAdapter.ifPositionSelected.get(i) && !noteListAdapter.noteCards.get(i).notebook.equals(moveToNotebook[0]))
+                            {
+                                int noteId = noteListAdapter.noteCards.get(i).id;
+                                ContentValues contentValues = new ContentValues();
+                                contentValues.put("note_book", moveToNotebook[0]);
+                                db.update("note", contentValues, "id = ?", new String[]{String.valueOf(noteId)});
+                                for (MainActivity.NotebookCard notebookCard : MainActivity.notebookAdapter.notebookCards)
+                                {
+                                    if (notebookCard.name.equals(MainActivity.noteAdapter.noteCards.get(i).notebook))
+                                    {
+                                        ContentValues contentValues1 = new ContentValues();
+                                        notebookCard.noteNum -= 1;
+                                        contentValues1.put("note_num", notebookCard.noteNum);
+                                        db.update("notebook", contentValues1, "name = ?", new String[]{notebookCard.name});
+                                    }
+                                    else if (notebookCard.name.equals(moveToNotebook[0]))
+                                    {
+                                        ContentValues contentValues1 = new ContentValues();
+                                        notebookCard.noteNum += 1;
+                                        contentValues1.put("note_num", notebookCard.noteNum);
+                                        db.update("notebook", contentValues1, "name = ?", new String[]{notebookCard.name});
+                                    }
+                                }
+                            }
+                        }
+                        MainActivity.notebookAdapter.getNotebookData();
+                        MainActivity.noteAdapter.getNoteData();
+                        MainActivity.noteAdapter.clearAll();
+                        MainActivity.noteAdapter.notifyDataSetChanged();
+
+                        setNoteListAdapter();
+                        dialog.dismiss();
+                    }
+                });
+                builder.create().show();
+                return true;
+            }
             case R.id.notebook_search_note:
                 Intent intent = new Intent();
                 intent.putExtra("notebook_name", notebookName);
@@ -202,16 +257,17 @@ public class NotebookActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    void setNoteListAdapter()
+    static void setNoteListAdapter()
     {
+        noteListAdapter.noteCards.clear();
         for (MainActivity.NoteCard noteCard : MainActivity.noteAdapter.noteCards)
         {
             if (noteCard.notebook.equals(notebookName))
             {
-                System.out.println("Title" + noteCard.title);
                 noteListAdapter.noteCards.add(noteCard);
             }
         }
+        noteListAdapter.notifyDataSetChanged();
     }
 
     AlertDialog.Builder setChangeNoteSortingWayDialog()
@@ -260,7 +316,7 @@ public class NotebookActivity extends AppCompatActivity
                 });
                 noteListAdapter.notifyDataSetChanged();
                 break;
-            case  CREATE_DATE:
+            case CREATE_DATE:
                 this.noteSortMode = NoteSortMode.CREATE_DATE;
                 Collections.sort(noteListAdapter.noteCards, new Comparator<MainActivity.NoteCard>()
                 {

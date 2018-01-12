@@ -90,4 +90,5 @@
 
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="title_activity_setting">SettingActivity</string>
+    <string name="move_note">移动笔记</string>
 </resources>

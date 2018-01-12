@@ -5,11 +5,7 @@
         android:id="@+id/set_note_sorting_way"
         android:title="@string/sorting_way"
         app:showAsAction="never"/>
-    <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never"/>
+
     <item
         android:id="@+id/search_note"
         android:icon="@drawable/ic_search_api_material"
@@ -24,6 +20,10 @@
         android:icon="@drawable/ic_clear_material"
         android:title="@string/delete_note"
         app:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/move_note"
+        android:title="@string/move_note"
+        app:showAsAction="never"/>
 
     <item
         android:id="@+id/search_notebook"

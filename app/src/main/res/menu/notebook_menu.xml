@@ -15,5 +15,9 @@
         android:id="@+id/notebook_note_sorting_way"
         android:title="@string/sorting_way"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/notebook_move_note"
+        android:title="@string/move_note"
+        app:showAsAction="never"/>
 
 </menu>

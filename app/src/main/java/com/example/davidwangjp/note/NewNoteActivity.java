@@ -318,6 +318,7 @@ public class NewNoteActivity extends AppCompatActivity {
 
         MainActivity.notebookAdapter.getNotebookData();
         MainActivity.noteAdapter.getNoteData();
+        NotebookActivity.setNoteListAdapter();
 
         db.close();
 
