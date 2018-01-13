@@ -34,7 +34,7 @@ public class SettingActivity extends AppCompatActivity
 
         ListView settingList = (ListView) findViewById(R.id.setting_list);
         ArrayList<String> list = new ArrayList<>();
-        list.add("默认笔记本");
+        list.add("更改默认笔记本");
         settingList.setAdapter(new ArrayAdapter<>(this, R.layout.setting_list_item, R.id.set_default_notebook, list));
         settingList.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {

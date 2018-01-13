@@ -4,7 +4,7 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">设置</string>
     <string name="search">Search</string>
     <string name="all_notes">所有笔记</string>
     <string name="all_notebooks">笔记本</string>
@@ -16,7 +16,7 @@
     <string name="search_notebook">搜索笔记本</string>
     <string name="new_notebook">新建笔记本</string>
     <string name="drawer_setting">设置</string>
-    <string name="title_activity_settings">Settings</string>
+    <string name="title_activity_settings">设置</string>
 
     <!-- Strings related to Settings -->
 

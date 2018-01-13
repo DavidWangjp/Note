@@ -10,6 +10,6 @@
         android:layout_height="wrap_content"
         android:paddingTop="6sp"
         android:paddingBottom="6sp"
-        android:textSize="24sp"
+        android:textSize="20sp"
         android:text="hello"/>
 </LinearLayout>

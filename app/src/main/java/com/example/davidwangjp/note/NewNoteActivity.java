@@ -34,7 +34,9 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ImageSpan;
+import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -55,18 +57,16 @@ import java.util.regex.Pattern;
 import static java.lang.Integer.parseInt;
 
 public class NewNoteActivity extends AppCompatActivity {
-    private ImageButton confirm;
+    private ImageButton confirm, redo, undo;
+    private ImageButton bold, underline,italic, deleteline;
     private ImageButton selectImage;
     private ImageButton takePhoto;
-    private ImageButton record_button;
     private EditText note_title;
     private EditText note_content;
     private PerformEdit mPerformEdit;
     private TextView notebook;
     private Button markdown;
-    private Button preview;
-    private Button open;
-    private Button redo, undo, bold;
+
     private String note_book;
     private int mImgViewWidth;
     private Uri imageUri;
@@ -101,16 +101,17 @@ public class NewNoteActivity extends AppCompatActivity {
         confirm = (ImageButton)findViewById(R.id.image_button_confirm);
         selectImage = (ImageButton)findViewById(R.id.select_image);
         takePhoto = (ImageButton)findViewById(R.id.take_photo);
-        record_button = (ImageButton)findViewById(R.id.record_button);
+        //record_button = (ImageButton)findViewById(R.id.record_button);
         note_title = (EditText)findViewById(R.id.note_title);
         note_content = (EditText)findViewById(R.id.note_content);
         notebook = (TextView) findViewById(R.id.notebook);
         markdown = (Button)findViewById(R.id.markdown);
-        preview = (Button)findViewById(R.id.preview);
-        open = (Button)findViewById(R.id.open_note);
-        redo = (Button)findViewById(R.id.redo);
-        undo = (Button)findViewById(R.id.undo);
-        bold = (Button)findViewById(R.id.bold);
+        redo = (ImageButton)findViewById(R.id.redo);
+        undo = (ImageButton)findViewById(R.id.undo);
+        bold = (ImageButton)findViewById(R.id.bold);
+        italic = (ImageButton)findViewById(R.id.italic);
+        underline = (ImageButton)findViewById(R.id.underline);
+        deleteline = (ImageButton)findViewById(R.id.deleteline);
 
 
         notebook.setText(note_book);
@@ -203,6 +204,16 @@ public class NewNoteActivity extends AppCompatActivity {
             }
         });
 
+        markdown.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String s = note_content.getText().toString();
+                Intent intent = new Intent(NewNoteActivity.this, MarkDown.class);
+                intent.putExtra("data", s);
+                startActivity(intent);
+            }
+        });
+
         redo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -220,12 +231,40 @@ public class NewNoteActivity extends AppCompatActivity {
         bold.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                int pos = note_content.getSelectionEnd();
                 SpannableStringBuilder ss = new SpannableStringBuilder(note_content.getText());
-                ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD),note_content.getSelectionStart(),note_content.getSelectionEnd(),Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD),note_content.getSelectionStart(),note_content.getSelectionEnd(),Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+                note_content.setText(ss);
+                note_content.setSelection(pos);
+            }
+        });
+
+        italic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SpannableStringBuilder ss = new SpannableStringBuilder(note_content.getText());
+                ss.setSpan(new StyleSpan(android.graphics.Typeface.ITALIC),note_content.getSelectionStart(),note_content.getSelectionEnd(),Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 note_content.setText(ss);
             }
         });
 
+        deleteline.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SpannableStringBuilder ss = new SpannableStringBuilder(note_content.getText());
+                ss.setSpan(new StrikethroughSpan(),note_content.getSelectionStart(),note_content.getSelectionEnd(),Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                note_content.setText(ss);
+            }
+        });
+
+        underline.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SpannableStringBuilder ss = new SpannableStringBuilder(note_content.getText());
+                ss.setSpan(new UnderlineSpan(),note_content.getSelectionStart(),note_content.getSelectionEnd(),Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                note_content.setText(ss);
+            }
+        });
 
         selectImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -263,7 +302,7 @@ public class NewNoteActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
+            startActivity(new Intent(NewNoteActivity.this, SettingActivity.class));
         }
 
         return super.onOptionsItemSelected(item);
