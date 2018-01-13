@@ -120,7 +120,6 @@ public class NewNoteActivity extends AppCompatActivity {
 
 
         notebook.setText(note_book);
-        //note_content.setMovementMethod(ScrollingMovementMethod.getInstance());// 设置可滚动
         mPerformEdit = new PerformEdit(note_content);
 
         if(!isNew)
@@ -218,20 +217,6 @@ public class NewNoteActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
-//        redo.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                mPerformEdit.redo();
-//            }
-//        });
-//
-//        undo.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                mPerformEdit.undo();
-//            }
-//        });
 
         bold.setOnClickListener(new View.OnClickListener() {
             @Override

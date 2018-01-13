@@ -335,7 +335,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.action_delete_note:
             {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("确认删除");
+                builder.setTitle("确认删除吗？");
                 builder.setPositiveButton("确认", new DialogInterface.OnClickListener()
                 {
                     @Override
@@ -1222,4 +1222,3 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 }
-

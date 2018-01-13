@@ -160,7 +160,7 @@ public class NotebookActivity extends AppCompatActivity
             case R.id.notebook_delete_note:
             {
                 AlertDialog.Builder builder = new AlertDialog.Builder(NotebookActivity.this);
-                builder.setTitle("确认删除");
+                builder.setTitle("确认删除吗？");
                 builder.setPositiveButton("确认", new DialogInterface.OnClickListener()
                 {
                     @Override
