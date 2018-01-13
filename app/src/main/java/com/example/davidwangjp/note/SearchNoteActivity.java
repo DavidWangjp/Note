@@ -82,7 +82,7 @@ public class SearchNoteActivity extends AppCompatActivity
                 noteAdapter.notifyDataSetChanged();
 
                 supportInvalidateOptionsMenu();
-                Toast.makeText(getApplicationContext(), "" + noteAdapter.isMultiSelect, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), "" + noteAdapter.isMultiSelect, Toast.LENGTH_SHORT).show();
             }
         });
         noteRecyclerView.setAdapter(noteAdapter);
@@ -112,19 +112,19 @@ public class SearchNoteActivity extends AppCompatActivity
             @Override
             public boolean onQueryTextSubmit(String query)
             {
-                Toast.makeText(getApplicationContext(), query, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), query, Toast.LENGTH_SHORT).show();
                 noteAdapter.noteCards.clear();
                 if (!notebookName.isEmpty())
                 {
                     for (MainActivity.NoteCard noteCard : noteCards)
-                        if (noteCard.title.contains(query) || noteCard.content.contains(query))
+                        if ((noteCard.title.contains(query) || noteCard.content.contains(query))
+                                && noteCard.notebook.equals(notebookName))
                             noteAdapter.noteCards.add(noteCard);
                 }
                 else
                 {
                     for (MainActivity.NoteCard noteCard : noteCards)
-                        if ((noteCard.title.contains(query) || noteCard.content.contains(query))
-                                && noteCard.notebook.equals(notebookName))
+                        if (noteCard.title.contains(query) || noteCard.content.contains(query))
                             noteAdapter.noteCards.add(noteCard);
                 }
                 noteAdapter.notifyDataSetChanged();

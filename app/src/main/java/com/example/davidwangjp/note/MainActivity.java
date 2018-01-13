@@ -423,6 +423,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.search_note:
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, SearchNoteActivity.class);
+                intent.putExtra("notebook_name", "");
                 startActivity(intent);
                 return true;
             case R.id.set_notebook_sorting_way:
@@ -938,7 +939,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         {
                                             ContentValues contentValues1 = new ContentValues();
                                             contentValues1.put("note_book", name);
-                                            db.update("note", contentValues, "id = ?",
+                                            db.update("note", contentValues1, "id = ?",
                                                     new String[]{String.valueOf(noteCard.id)});
                                         }
                                     }

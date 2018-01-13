@@ -246,6 +246,7 @@ public class NotebookActivity extends AppCompatActivity
             }
             case R.id.notebook_search_note:
                 Intent intent = new Intent();
+                intent.setClass(NotebookActivity.this, SearchNoteActivity.class);
                 intent.putExtra("notebook_name", notebookName);
                 startActivity(intent);
                 return true;
