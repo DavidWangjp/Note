@@ -334,32 +334,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return true;
             case R.id.action_delete_note:
             {
-                SQLiteDatabase db = dbHelper.getReadableDatabase();
-                for (int i = 0; i < noteAdapter.noteCards.size(); i++)
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("确认删除");
+                builder.setPositiveButton("确认", new DialogInterface.OnClickListener()
                 {
-                    if (noteAdapter.ifPositionSelected.get(i))
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
                     {
-                        int noteId = noteAdapter.noteCards.get(i).id;
-                        db.delete("note", "id = ?", new String[]{String.valueOf(noteId)});
-                        for (NotebookCard notebookCard : notebookAdapter.notebookCards)
+                        SQLiteDatabase db = dbHelper.getReadableDatabase();
+                        for (int i = 0; i < noteAdapter.noteCards.size(); i++)
                         {
-                            if (Objects.equals(notebookCard.name, noteAdapter.noteCards.get(i).notebook))
+                            if (noteAdapter.ifPositionSelected.get(i))
                             {
-                                ContentValues contentValues = new ContentValues();
-                                contentValues.put("name", notebookCard.name);
-                                notebookCard.noteNum -= 1;
-                                contentValues.put("note_num", notebookCard.noteNum);
-                                db.update("notebook", contentValues, "name = ?", new String[]{notebookCard.name});
-                                break;
+                                int noteId = noteAdapter.noteCards.get(i).id;
+                                db.delete("note", "id = ?", new String[]{String.valueOf(noteId)});
+                                for (NotebookCard notebookCard : notebookAdapter.notebookCards)
+                                {
+                                    if (Objects.equals(notebookCard.name, noteAdapter.noteCards.get(i).notebook))
+                                    {
+                                        ContentValues contentValues = new ContentValues();
+                                        contentValues.put("name", notebookCard.name);
+                                        notebookCard.noteNum -= 1;
+                                        contentValues.put("note_num", notebookCard.noteNum);
+                                        db.update("notebook", contentValues, "name = ?", new String[]{notebookCard.name});
+                                        break;
+                                    }
+                                }
+
                             }
                         }
+                        notebookAdapter.getNotebookData();
+                        noteAdapter.getNoteData();
+                        noteAdapter.clearAll();
+                        noteAdapter.notifyDataSetChanged();
+                    }
+                });
+                builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
 
                     }
-                }
-                notebookAdapter.getNotebookData();
-                noteAdapter.getNoteData();
-                noteAdapter.clearAll();
-                noteAdapter.notifyDataSetChanged();
+                });
+                builder.create().show();
                 return true;
             }
             case R.id.move_note:
@@ -409,6 +427,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         noteAdapter.clearAll();
                         noteAdapter.notifyDataSetChanged();
                         dialog.dismiss();
+                        Toast.makeText(getApplicationContext(), moveToNotebook[0], Toast.LENGTH_SHORT).show();
                     }
                 });
                 builder.create().show();
@@ -963,16 +982,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                     case 1:
                     {
-                        String name = notebookAdapter.notebookCards.get(position).name;
-                        if (name.equals(defaultNotebook))
-                            setDefaultNotebook("");
-                        defaultNotebook = getDefaultNotebook();
-                        SQLiteDatabase db = dbHelper.getReadableDatabase();
-                        db.delete("note", "note_book = ?", new String[]{name});
-                        db.delete("notebook", "name = ?", new String[]{name});
-                        noteAdapter.getNoteData();
-                        notebookAdapter.getNotebookData();
-                        //notebookAdapter.notifyDataSetChanged();
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                        builder.setTitle("确认删除");
+                        builder.setPositiveButton("确认", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                String name = notebookAdapter.notebookCards.get(position).name;
+                                if (name.equals(defaultNotebook))
+                                    setDefaultNotebook("");
+                                defaultNotebook = getDefaultNotebook();
+                                SQLiteDatabase db = dbHelper.getReadableDatabase();
+                                db.delete("note", "note_book = ?", new String[]{name});
+                                db.delete("notebook", "name = ?", new String[]{name});
+                                noteAdapter.getNoteData();
+                                notebookAdapter.getNotebookData();
+                            }
+                        });
+                        builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+
+                            }
+                        });
+                        builder.create().show();
                         break;
                     }
                 }

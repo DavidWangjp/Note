@@ -158,38 +158,58 @@ public class NotebookActivity extends AppCompatActivity
         switch (id)
         {
             case R.id.notebook_delete_note:
-                SQLiteDatabase db = dbHelper.getReadableDatabase();
-                Toast.makeText(getApplicationContext(), "" + 1, Toast.LENGTH_SHORT).show();
-                for (int i = 0; i < noteListAdapter.noteCards.size(); i++)
+            {
+                AlertDialog.Builder builder = new AlertDialog.Builder(NotebookActivity.this);
+                builder.setTitle("确认删除");
+                builder.setPositiveButton("确认", new DialogInterface.OnClickListener()
                 {
-                    if (noteListAdapter.ifPositionSelected.get(i))
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
                     {
-                        int noteId = noteListAdapter.noteCards.get(i).id;
-                        db.delete("note", "id = ?", new String[]{String.valueOf(noteId)});
-                        for (MainActivity.NotebookCard notebookCard : MainActivity.notebookAdapter.notebookCards)
+                        SQLiteDatabase db = dbHelper.getReadableDatabase();
+                        Toast.makeText(getApplicationContext(), "" + 1, Toast.LENGTH_SHORT).show();
+                        for (int i = 0; i < noteListAdapter.noteCards.size(); i++)
                         {
-                            if (notebookCard.name.equals(noteListAdapter.noteCards.get(i).notebook))
+                            if (noteListAdapter.ifPositionSelected.get(i))
                             {
-                                ContentValues contentValues = new ContentValues();
-                                contentValues.put("name", notebookCard.name);
-                                notebookCard.noteNum -= 1;
-                                contentValues.put("note_num", notebookCard.noteNum);
-                                db.update("notebook", contentValues, "name = ?", new String[]{notebookCard.name});
-                                break;
+                                int noteId = noteListAdapter.noteCards.get(i).id;
+                                db.delete("note", "id = ?", new String[]{String.valueOf(noteId)});
+                                for (MainActivity.NotebookCard notebookCard : MainActivity.notebookAdapter.notebookCards)
+                                {
+                                    if (notebookCard.name.equals(noteListAdapter.noteCards.get(i).notebook))
+                                    {
+                                        ContentValues contentValues = new ContentValues();
+                                        contentValues.put("name", notebookCard.name);
+                                        notebookCard.noteNum -= 1;
+                                        contentValues.put("note_num", notebookCard.noteNum);
+                                        db.update("notebook", contentValues, "name = ?", new String[]{notebookCard.name});
+                                        break;
+                                    }
+                                }
                             }
                         }
+                        MainActivity.notebookAdapter.getNotebookData();
+                        MainActivity.noteAdapter.getNoteData();
+                        MainActivity.noteAdapter.clearAll();
+                        MainActivity.noteAdapter.notifyDataSetChanged();
+                        noteListAdapter.noteCards.clear();
+                        setNoteListAdapter();
+                        sortNote(noteSortMode);
+                        noteListAdapter.clearAll();
+                        noteListAdapter.notifyDataSetChanged();
                     }
-                }
-                MainActivity.notebookAdapter.getNotebookData();
-                MainActivity.noteAdapter.getNoteData();
-                MainActivity.noteAdapter.clearAll();
-                MainActivity.noteAdapter.notifyDataSetChanged();
-                noteListAdapter.noteCards.clear();
-                setNoteListAdapter();
-                sortNote(noteSortMode);
-                noteListAdapter.clearAll();
-                noteListAdapter.notifyDataSetChanged();
+                });
+                builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+
+                    }
+                });
+                builder.create().show();
                 return true;
+            }
             case R.id.notebook_move_note:
             {
                 final String[] moveToNotebook = new String[1];
