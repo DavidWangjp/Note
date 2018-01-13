@@ -14,6 +14,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -58,14 +59,14 @@ import static java.lang.Integer.parseInt;
 
 public class NewNoteActivity extends AppCompatActivity {
     private ImageButton confirm, redo, undo;
-    private ImageButton bold, underline,italic, deleteline;
+    private ImageButton bold, underline,italic, deleteline, markdown;
     private ImageButton selectImage;
     private ImageButton takePhoto;
     private EditText note_title;
     private EditText note_content;
     private PerformEdit mPerformEdit;
     private TextView notebook;
-    private Button markdown;
+    //private Button markdown;
 
     private String note_book;
     private int mImgViewWidth;
@@ -79,6 +80,8 @@ public class NewNoteActivity extends AppCompatActivity {
     private final int PICK_PIC = 1;
     private final int TAKE_PIC = 2;
     private final int REC = 3;
+
+    private boolean flag1,flag2, flag3, flag4;
 
     static MainActivity.DatabaseHelper dbHelper;
 
@@ -96,6 +99,8 @@ public class NewNoteActivity extends AppCompatActivity {
         isNew = note_id < 0;
         note_book = intent.getStringExtra("notebook");
 
+        flag1 = flag2 = flag3 = flag4 = false;
+
         dbHelper = new MainActivity.DatabaseHelper(NewNoteActivity.this);
 
         confirm = (ImageButton)findViewById(R.id.image_button_confirm);
@@ -105,9 +110,9 @@ public class NewNoteActivity extends AppCompatActivity {
         note_title = (EditText)findViewById(R.id.note_title);
         note_content = (EditText)findViewById(R.id.note_content);
         notebook = (TextView) findViewById(R.id.notebook);
-        markdown = (Button)findViewById(R.id.markdown);
-        redo = (ImageButton)findViewById(R.id.redo);
-        undo = (ImageButton)findViewById(R.id.undo);
+        markdown = (ImageButton)findViewById(R.id.markdown);
+//        redo = (ImageButton)findViewById(R.id.redo);
+//        undo = (ImageButton)findViewById(R.id.undo);
         bold = (ImageButton)findViewById(R.id.bold);
         italic = (ImageButton)findViewById(R.id.italic);
         underline = (ImageButton)findViewById(R.id.underline);
@@ -208,33 +213,43 @@ public class NewNoteActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String s = note_content.getText().toString();
-                Intent intent = new Intent(NewNoteActivity.this, MarkDown.class);
+                Intent intent = new Intent(NewNoteActivity.this, MDPreview.class);
                 intent.putExtra("data", s);
                 startActivity(intent);
             }
         });
 
-        redo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mPerformEdit.redo();
-            }
-        });
-
-        undo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mPerformEdit.undo();
-            }
-        });
+//        redo.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                mPerformEdit.redo();
+//            }
+//        });
+//
+//        undo.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                mPerformEdit.undo();
+//            }
+//        });
 
         bold.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 int pos = note_content.getSelectionEnd();
                 SpannableStringBuilder ss = new SpannableStringBuilder(note_content.getText());
-                ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD),note_content.getSelectionStart(),note_content.getSelectionEnd(),Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
-                note_content.setText(ss);
+                if(flag1==false) {
+                    ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), note_content.getSelectionStart(), note_content.getSelectionEnd(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    flag1 = true;
+                    note_content.setText(ss);
+                }else {
+                    ss.setSpan(new StyleSpan(Typeface.NORMAL), note_content.getSelectionStart(), note_content.getSelectionEnd(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    flag1 = false;
+                    //Log.e("flag1",ss.toString());
+                    note_content.setText(ss.toString());
+                }
+                //note_content.setText(ss);
                 note_content.setSelection(pos);
             }
         });
@@ -242,27 +257,57 @@ public class NewNoteActivity extends AppCompatActivity {
         italic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                int pos = note_content.getSelectionEnd();
                 SpannableStringBuilder ss = new SpannableStringBuilder(note_content.getText());
-                ss.setSpan(new StyleSpan(android.graphics.Typeface.ITALIC),note_content.getSelectionStart(),note_content.getSelectionEnd(),Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                note_content.setText(ss);
+                if(flag2==false) {
+                    ss.setSpan(new StyleSpan(Typeface.ITALIC), note_content.getSelectionStart(), note_content.getSelectionEnd(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    flag2 = true;
+                    note_content.setText(ss);
+                }else {
+                    ss.setSpan(new StyleSpan(Typeface.NORMAL), note_content.getSelectionStart(), note_content.getSelectionEnd(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    flag2 = false;
+                    note_content.setText(ss.toString());
+                }
+                //note_content.setText(ss);
+                note_content.setSelection(pos);
             }
         });
 
         deleteline.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                int pos = note_content.getSelectionEnd();
                 SpannableStringBuilder ss = new SpannableStringBuilder(note_content.getText());
-                ss.setSpan(new StrikethroughSpan(),note_content.getSelectionStart(),note_content.getSelectionEnd(),Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                note_content.setText(ss);
+                if(flag3==false) {
+                    ss.setSpan(new StrikethroughSpan(), note_content.getSelectionStart(), note_content.getSelectionEnd(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    flag3 = true;
+                    note_content.setText(ss);
+                }else {
+                    ss.setSpan(new StyleSpan(Typeface.NORMAL), note_content.getSelectionStart(), note_content.getSelectionEnd(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    flag3 = false;
+                    note_content.setText(ss.toString());
+                }
+                //note_content.setText(ss);
+                note_content.setSelection(pos);
             }
         });
 
         underline.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                int pos = note_content.getSelectionEnd();
                 SpannableStringBuilder ss = new SpannableStringBuilder(note_content.getText());
-                ss.setSpan(new UnderlineSpan(),note_content.getSelectionStart(),note_content.getSelectionEnd(),Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                note_content.setText(ss);
+                if(flag4==false) {
+                    ss.setSpan(new UnderlineSpan(), note_content.getSelectionStart(), note_content.getSelectionEnd(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    flag4 = true;
+                    note_content.setText(ss);
+                }else {
+                    ss.setSpan(new StyleSpan(Typeface.NORMAL), note_content.getSelectionStart(), note_content.getSelectionEnd(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    flag4 = false;
+                    note_content.setText(ss.toString());
+                }
+                //note_content.setText(ss);
+                note_content.setSelection(pos);
             }
         });
 
@@ -304,6 +349,10 @@ public class NewNoteActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             startActivity(new Intent(NewNoteActivity.this, SettingActivity.class));
         }
+        if (id == R.id.undo)
+            mPerformEdit.undo();
+        if (id == R.id.redo)
+            mPerformEdit.redo();
 
         return super.onOptionsItemSelected(item);
     }

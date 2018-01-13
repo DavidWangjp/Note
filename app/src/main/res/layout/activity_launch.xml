@@ -8,10 +8,20 @@
     tools:context="com.example.davidwangjp.note.LaunchActivity">
 
     <ImageView
+        android:id="@+id/launch_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/launch"
         android:layout_centerInParent="true"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="天马笔记"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:layout_below="@+id/launch_image"
+        android:layout_centerHorizontal="true"
         />
 
 </RelativeLayout>

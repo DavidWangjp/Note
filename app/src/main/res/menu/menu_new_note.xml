@@ -6,4 +6,12 @@
         android:title="@string/action_settings"
         android:orderInCategory="100"
         app:showAsAction="never" />
+    <item android:id="@+id/undo"
+        android:title="undo"
+        android:icon="@drawable/ic_action_undo"
+        app:showAsAction="always"/>
+    <item android:id="@+id/redo"
+        android:title="redo"
+        android:icon="@drawable/ic_action_redo"
+        app:showAsAction="always"/>
 </menu>
