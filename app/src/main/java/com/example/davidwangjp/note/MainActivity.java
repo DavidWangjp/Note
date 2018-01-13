@@ -932,6 +932,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     ContentValues contentValues = new ContentValues();
                                     contentValues.put("name", name);
                                     contentValues.put("note_num", notebookAdapter.notebookCards.get(position).noteNum);
+                                    for (NoteCard noteCard : noteAdapter.noteCards)
+                                    {
+                                        if (noteCard.notebook.equals(notebookAdapter.notebookCards.get(position).name))
+                                        {
+                                            ContentValues contentValues1 = new ContentValues();
+                                            contentValues1.put("note_book", name);
+                                            db.update("note", contentValues, "id = ?",
+                                                    new String[]{String.valueOf(noteCard.id)});
+                                        }
+                                    }
                                     int count = db.update("notebook", contentValues, "name = ?",
                                             new String[]{notebookAdapter.notebookCards.get(position).name});
                                     if (count == -1)
@@ -943,6 +953,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         notebookAdapter.getNotebookData();
                                         alertDialog.dismiss();
                                     }
+                                    noteAdapter.getNoteData();
+                                    notebookAdapter.getNotebookData();
                                 }
                             }
                         });
